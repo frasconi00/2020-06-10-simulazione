@@ -5,8 +5,10 @@
 package it.polito.tdp.imdb;
 
 import java.net.URL;
+import java.util.List;
 import java.util.ResourceBundle;
 
+import it.polito.tdp.imdb.model.Actor;
 import it.polito.tdp.imdb.model.Model;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -35,10 +37,10 @@ public class FXMLController {
     private Button btnSimulazione; // Value injected by FXMLLoader
 
     @FXML // fx:id="boxGenere"
-    private ComboBox<?> boxGenere; // Value injected by FXMLLoader
+    private ComboBox<String> boxGenere; // Value injected by FXMLLoader
 
     @FXML // fx:id="boxAttore"
-    private ComboBox<?> boxAttore; // Value injected by FXMLLoader
+    private ComboBox<Actor> boxAttore; // Value injected by FXMLLoader
 
     @FXML // fx:id="txtGiorni"
     private TextField txtGiorni; // Value injected by FXMLLoader
@@ -48,17 +50,65 @@ public class FXMLController {
 
     @FXML
     void doAttoriSimili(ActionEvent event) {
+    	txtResult.clear();
+    	
+    	Actor partenza = boxAttore.getValue();
+    	
+    	if(partenza==null) {
+    		txtResult.appendText("Errore-Prima scegliere attore da tendina");
+    		return;
+    	}
+    	
+    	List<Actor> result = model.doAttoriSimili(partenza);
+    	
+    	txtResult.appendText("ATTORI SIMILI A: "+partenza);
+    	for(Actor a : result)
+    		txtResult.appendText("\n"+a);
 
     }
 
     @FXML
     void doCreaGrafo(ActionEvent event) {
+    	txtResult.clear();
+    	
+    	String genre = boxGenere.getValue();
+    	
+    	if(genre==null) {
+    		txtResult.appendText("Errore-Prima scegliere un genere!");
+    		return;
+    	}
+    	
+    	model.creaGrafo(genre);
+    	
+    	txtResult.appendText("Grafo creato!");
+    	txtResult.appendText("\n#VERTICI: "+model.nVertici());
+    	txtResult.appendText("\n#ARCHI: "+model.nArchi());
+    	
+    	boxAttore.getItems().clear();
+    	boxAttore.getItems().addAll(model.getActors());
 
     }
 
     @FXML
     void doSimulazione(ActionEvent event) {
-
+    	txtResult.clear();
+    	
+    	if(!model.grafoCreato()) {
+    		txtResult.appendText("Errore-prima creare il grafo");
+    		return;
+    	}
+    	
+    	try {
+    		
+    		int n = Integer.parseInt(txtGiorni.getText());
+    		String result = model.simula(n);
+    		
+    		txtResult.appendText(result);
+    		
+    	}catch(NumberFormatException e) {
+    		txtResult.appendText("Errore-inserire un numero interno di giorni");
+    		return;
+    	}
     }
 
     @FXML // This method is called by the FXMLLoader when initialization is complete
@@ -75,5 +125,8 @@ public class FXMLController {
     
     public void setModel(Model model) {
     	this.model = model;
+    	
+    	boxGenere.getItems().clear();
+    	boxGenere.getItems().addAll(model.getGenres());
     }
 }
